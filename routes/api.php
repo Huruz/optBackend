@@ -22,3 +22,11 @@ Route::get('/greeting', function (Response $response) {
 });
 
 Route::post('products', "ProductController@store");
+
+Route::get('products', "ProductController@index");
+
+Route::get('products/{id}', "ProductController@show")->where(['id' => '[0-9]+']);
+
+Route::put('products/{id}', "ProductController@update")->where(['id' => '[0-9]+']);;
+
+Route::delete('products/{id}', "ProductController@destroy")->where(['id' => '[0-9]+']);;
