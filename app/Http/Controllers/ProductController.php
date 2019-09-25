@@ -17,11 +17,11 @@ class ProductController extends Controller
         //
         $products = Product::all();
 
-        if(!is_null($products)){
+        if(!$products->isEmpty()){
             return response()->json($products,200);
         }
         else{
-            return response()->json(null,404);
+            return response()->json(NULL,404);
         }
 
     }
@@ -66,7 +66,7 @@ class ProductController extends Controller
             return response()->json($product,200);
         }
         else{
-            return response()->json(null,404);
+            return response()->json($product,404);
         }
     }
 
@@ -91,13 +91,14 @@ class ProductController extends Controller
     public function update(Request $request, $id)
     {
         //
-        $product = Product::find($id)->update($request->all());
+        $product = Product::find($id);
 
         if (!is_null($product)){
+            $product->update($request->all());
             return response()->json($product,200);
         }
         else{
-            return response()->json(null,404);
+            return response()->json($product,404);
         }
     }
 
@@ -110,9 +111,11 @@ class ProductController extends Controller
     public function destroy($id)
     {
         //
-        $product = Product::find($id)->delete();
+        $product = Product::find($id);
+        //$product = Product::where('id',$id)->delete();
 
         if (!is_null($product)){
+            $product->delete();
             return response()->json(null,200);
         }
         else{

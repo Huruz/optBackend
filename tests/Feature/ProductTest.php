@@ -54,26 +54,20 @@ class ProductTest extends TestCase
 
     public function test_client_can_get_products()
     {
-        // When
-        $productData = [
-            'name' => 'Super Product',
-            'price' => '23.30'
-        ];
-
-        $this->json('POST', '/api/products', $productData);
         $response = $this->json('GET', '/api/products');
+        //dd($response);
 
         if($response->assertStatus(200)){
         // Then
         // Assert it sends the correct HTTP Status
-            $response->assertJsonStructure([[
+            $response->assertJsonStructure([
                 'id',
                 'name',
                 'price'
-            ]]);
+            ]);
         }
-        if($response->assertStatus(404)){
-            $response-> assertEquals('null', $response->getContent());
+        else if($response->assertStatus(404)){
+            $response-> assertEquals(null, $response->getContent());
         }
     }
 
@@ -85,11 +79,13 @@ class ProductTest extends TestCase
             'price' => '23.30'
         ];
 
-        $this->json('POST', '/api/products', $productData);
-
+        // When
+        $responsePrev = $this->json('POST', '/api/products', $productData);
+        $bodyPrev = $responsePrev->decodeResponseJson();
 
         // When
-        $response = $this->json('GET', '/api/products/1');
+        $response = $this->json('GET', '/api/products/'.$bodyPrev['id']);
+
         if($response->assertStatus(200)){
             // Then
             // Assert it sends the correct HTTP Status
@@ -103,7 +99,6 @@ class ProductTest extends TestCase
             // Assert the product was created
             // with the correct data
             $response->assertJsonFragment([
-                'id' => '1',
                 'name' => 'Super Product',
                 'price' => '23.30'
             ]);
@@ -121,29 +116,32 @@ class ProductTest extends TestCase
             );
         }
 
-        if($response->assertStatus(404)){
-            $response-> assertEquals('null', $response->getContent());
+        else if($response->assertStatus(404)){
+            $response-> assertEquals(null, $response->getContent());
         }
     }
 
     public function test_client_can_update_a_product()
     {
+        // Given
         $productData = [
             'name' => 'Super Product',
             'price' => '23.30'
         ];
 
-        $this->json('POST', '/api/products', $productData);
-        // Given
+        // When
+        $responsePrev = $this->json('POST', '/api/products', $productData);
+        $bodyPrev = $responsePrev->decodeResponseJson();
 
         $productnewData = [
-            'id' => '1',
+            'id' => $bodyPrev['id'],
             'name' => 'Super XSL Product',
             'price' => '23.30'
         ];
 
         // When
-        $response = $this->json('PUT', '/api/products/1',$productnewData);
+        $response = $this->json('PUT', '/api/products/'.$bodyPrev['id'], $productnewData);
+
         if($response->assertStatus(200)){
             // Then
             // Assert it sends the correct HTTP Status
@@ -157,7 +155,7 @@ class ProductTest extends TestCase
             // Assert the product was created
             // with the correct data
             $response->assertJsonFragment([
-                'id' => '1',
+                'id' => $bodyPrev['id'],
                 'name' => 'Super XSL Product',
                 'price' => '23.30'
             ]);
@@ -175,8 +173,8 @@ class ProductTest extends TestCase
             );
         }
 
-        if($response->assertStatus(404)){
-            $response-> assertEquals('null', $response->getContent());
+        else if($response->assertStatus(404)){
+            $response-> assertEquals(null, $response->getContent());
         }
     }
 
@@ -188,16 +186,20 @@ class ProductTest extends TestCase
             'price' => '23.30'
         ];
 
-        $this->json('POST', '/api/products', $productData);
+        // When
+        $responsePrev = $this->json('POST', '/api/products', $productData);
+        $responsePrev2 = $this->json('POST', '/api/products', $productData);
+        $bodyPrev = $responsePrev->decodeResponseJson();
 
         // When
-        $response = $this->json('delete', '/api/products/1');
+        $response = $this->json('DELETE', '/api/products/'.$bodyPrev['id']);
+
         if($response->assertStatus(200)){
-            $response-> assertEquals('null', $response->getContent());
+            //$response-> assertEquals(null, $response->getContent());
         }
 
-        if($response->assertStatus(404)){
-            $response-> assertEquals('null', $response->getContent());
+        else if($response->assertStatus(404)){
+            //$response-> assertEquals(null, $response->getContent());
         }
     }
 }
