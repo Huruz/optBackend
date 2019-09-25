@@ -54,17 +54,25 @@ class ProductTest extends TestCase
 
     public function test_client_can_get_products()
     {
+        $productData = [
+            'name' => 'Super Product',
+            'price' => '23.30'
+        ];
+
+        // When
+        $responsePrev = $this->json('POST', '/api/products', $productData);
+
         $response = $this->json('GET', '/api/products');
         //dd($response);
 
         if($response->assertStatus(200)){
         // Then
         // Assert it sends the correct HTTP Status
-            $response->assertJsonStructure([
+            $response->assertJsonStructure([[
                 'id',
                 'name',
                 'price'
-            ]);
+            ]]);
         }
         else if($response->assertStatus(404)){
             $response-> assertEquals(null, $response->getContent());
