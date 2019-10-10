@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Product;
 
 class ProductTest extends TestCase
 {
@@ -54,13 +55,7 @@ class ProductTest extends TestCase
 
     public function test_client_can_get_products()
     {
-        $productData = [
-            'name' => 'Super Product',
-            'price' => '23.30'
-        ];
-
-        // When
-        $responsePrev = $this->json('POST', '/api/products', $productData);
+        $product = factory(Product::class)->create();
 
         $response = $this->json('GET', '/api/products');
         //dd($response);
@@ -68,7 +63,7 @@ class ProductTest extends TestCase
         if($response->assertStatus(200)){
         // Then
         // Assert it sends the correct HTTP Status
-            $response->assertJsonStructure([[
+            $response->assertJsonStructure(['data' => [
                 'id',
                 'name',
                 'price'
@@ -82,17 +77,10 @@ class ProductTest extends TestCase
     public function test_client_can_show_a_product()
     {
         // Given
-        $productData = [
-            'name' => 'Super Product',
-            'price' => '23.30'
-        ];
+        $product = factory(Product::class)->create();
 
         // When
-        $responsePrev = $this->json('POST', '/api/products', $productData);
-        $bodyPrev = $responsePrev->decodeResponseJson();
-
-        // When
-        $response = $this->json('GET', '/api/products/'.$bodyPrev['id']);
+        $response = $this->json('GET', '/api/products/'.$product->id);
 
         if($response->assertStatus(200)){
             // Then
@@ -131,24 +119,14 @@ class ProductTest extends TestCase
 
     public function test_client_can_update_a_product()
     {
-        // Given
-        $productData = [
-            'name' => 'Super Product',
-            'price' => '23.30'
-        ];
+        $product = factory(Product::class)->create();
+
+        $newProduct = factory(Product::class)->make([
+            'id' => $product->id,
+        ]);
 
         // When
-        $responsePrev = $this->json('POST', '/api/products', $productData);
-        $bodyPrev = $responsePrev->decodeResponseJson();
-
-        $productnewData = [
-            'id' => $bodyPrev['id'],
-            'name' => 'Super XSL Product',
-            'price' => '23.30'
-        ];
-
-        // When
-        $response = $this->json('PUT', '/api/products/'.$bodyPrev['id'], $productnewData);
+        $response = $this->json('PUT', '/api/products/'.$product->id, $newProduct->toArray());
 
         if($response->assertStatus(200)){
             // Then
@@ -163,9 +141,9 @@ class ProductTest extends TestCase
             // Assert the product was created
             // with the correct data
             $response->assertJsonFragment([
-                'id' => $bodyPrev['id'],
-                'name' => 'Super XSL Product',
-                'price' => '23.30'
+                'id' => $product->id,
+                'name' => $newProduct->name,
+                'price' => $newProduct->price
             ]);
 
             $body = $response->decodeResponseJson();
@@ -174,9 +152,9 @@ class ProductTest extends TestCase
             $this->assertDatabaseHas(
                 'products',
                 [
-                    'id' => $body['id'],
-                    'name' => 'Super XSL Product',
-                    'price' => '23.30'
+                    'id' => $product->id,
+                    'name' => $newProduct->name,
+                    'price' => $newProduct->price
                 ]
             );
         }
@@ -188,19 +166,10 @@ class ProductTest extends TestCase
 
     public function test_client_can_delete_a_product()
     {
-        // Given
-        $productData = [
-            'name' => 'Super Product',
-            'price' => '23.30'
-        ];
+        $product = factory(Product::class)->create();
 
         // When
-        $responsePrev = $this->json('POST', '/api/products', $productData);
-        $responsePrev2 = $this->json('POST', '/api/products', $productData);
-        $bodyPrev = $responsePrev->decodeResponseJson();
-
-        // When
-        $response = $this->json('DELETE', '/api/products/'.$bodyPrev['id']);
+        $response = $this->json('DELETE', '/api/products/'.$product->id);
 
         if($response->assertStatus(200)){
             //$response-> assertEquals(null, $response->getContent());
