@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreProduct;
+use App\Http\Requests\UpdateProduct;
+use \Illuminate\Http\Request;
 use App\Product;
-use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
@@ -21,7 +23,7 @@ class ProductController extends Controller
             return response()->json($products,200);
         }
         else{
-            return response()->json(NULL,404);
+            return response()->json(NULL,200);
         }
 
     }
@@ -39,11 +41,13 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\RequestsStoreProduct  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreProduct $request)
     {
+        $validated = $request->validated();
+
         // Create a new product
         $product = Product::create($request->all());
 
@@ -66,7 +70,8 @@ class ProductController extends Controller
             return response()->json($product,200);
         }
         else{
-            return response()->json($product,404);
+            $error = ['errors' => ['code' => 'Error-2', 'title' => 'ID does not exist']];
+            return response()->json($error,404);
         }
     }
 
@@ -85,20 +90,21 @@ class ProductController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Product  $product
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UpdateProduct $request, $id)
     {
+        $validated = $request->validated();
         //
-        $product = Product::find($id);
 
+        $product = Product::find($id);
         if (!is_null($product)){
             $product->update($request->all());
             return response()->json($product,200);
         }
         else{
-            return response()->json($product,404);
+            $error = ['errors' => ['code' => 'Error-2', 'title' => 'ID does not exist']];
+            return response()->json($error,404);
         }
     }
 
@@ -116,10 +122,11 @@ class ProductController extends Controller
 
         if (!is_null($product)){
             $product->delete();
-            return response()->json(null,200);
+            return response()->json(NULL,204);
         }
         else{
-            return response()->json(null,404);
+            $error = ['errors' => ['code' => 'Error-2', 'title' => 'ID does not exist']];
+            return response()->json($error,404);
         }
     }
 }
