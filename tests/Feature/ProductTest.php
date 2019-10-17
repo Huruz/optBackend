@@ -16,7 +16,7 @@ class ProductTest extends TestCase
     public function test_client_can_create_a_product()
     {
         // Given
-        $product = factory(Product::class)->make();
+        $product = factory(Product::class,'reFormatted')->make();
 
         // When
         $response = $this->json('POST', '/api/products', $product->toArray());
@@ -27,16 +27,22 @@ class ProductTest extends TestCase
 
         // Assert the response has the correct structure
         $response->assertJsonStructure([
-            'id',
-            'name',
-            'price'
+            'data' => [
+                'type',
+                'id',
+                'attributes' => [
+                    'name',
+                    'price'
+                ],
+                'links'
+            ]
         ]);
 
         // Assert the product was created
         // with the correct data
         $response->assertJsonFragment([
-            'name' => $product->name,
-            'price' => $product->price
+            'name' => $product->data['attributes']['name'],
+            'price' => $product->data['attributes']['price']
         ]);
 
         $body = $response->decodeResponseJson();
@@ -45,9 +51,9 @@ class ProductTest extends TestCase
         $this->assertDatabaseHas(
             'products',
             [
-                'id' => $body['id'],
-                'name' => $product->name,
-                'price' => strval($product->price)
+                'id' => $body['data']['id'],
+                'name' => $product->data['attributes']['name'],
+                'price' => $product->data['attributes']['price']
             ]
         );
     }
@@ -58,9 +64,7 @@ class ProductTest extends TestCase
     public function test_client_cant_create_a_product_without_name()
     {
         // Given
-        $product = factory(Product::class)->make([
-            'name' => ''
-        ]);
+        $product = factory(Product::class,'woutName')->make();
 
         // When
         $response = $this->json('POST', '/api/products', $product->toArray());
@@ -86,8 +90,8 @@ class ProductTest extends TestCase
         $this->assertDatabaseMissing(
             'products',
             [
-                'name' => $product->name,
-                'price' => $product->price
+                'name' => $product->data['attributes']['name'],
+                'price' => $product->data['attributes']['price']
             ]
         );
     }
@@ -98,9 +102,7 @@ class ProductTest extends TestCase
     public function test_client_cant_create_a_product_without_price()
     {
         // Given
-        $product = factory(Product::class)->make([
-            'price' => null
-        ]);
+        $product = factory(Product::class,'woutPrice')->make();
 
         // When
         $response = $this->json('POST', '/api/products', $product->toArray());
@@ -126,8 +128,8 @@ class ProductTest extends TestCase
         $this->assertDatabaseMissing(
             'products',
             [
-                'name' => $product->name,
-                'price' => $product->price
+                'name' => $product->data['attributes']['name'],
+                'price' => $product->data['attributes']['price']
             ]
         );
     }
@@ -138,9 +140,7 @@ class ProductTest extends TestCase
     public function test_client_cant_create_a_product_without_numeric_price()
     {
         // Given
-        $product = factory(Product::class)->make([
-            'price' => "Queso"
-        ]);
+        $product = factory(Product::class,'woutNumPrice')->make();
 
         // When
         $response = $this->json('POST', '/api/products', $product->toArray());
@@ -169,9 +169,7 @@ class ProductTest extends TestCase
     public function test_client_cant_create_a_product_with_a_price_small_than_one()
     {
         // Given
-        $product = factory(Product::class)->make([
-            'price' => 0.0
-        ]);
+        $product = factory(Product::class,'subZero')->make();
 
         // When
         $response = $this->json('POST', '/api/products', $product->toArray());
@@ -197,8 +195,8 @@ class ProductTest extends TestCase
         $this->assertDatabaseMissing(
             'products',
             [
-                'name' => $product->name,
-                'price' => $product->price
+                'name' => $product->data['attributes']['name'],
+                'price' => $product->data['attributes']['price']
             ]
         );
     }
@@ -211,20 +209,32 @@ class ProductTest extends TestCase
         $products = factory(Product::class,2)->create();
 
         $response = $this->json('GET', '/api/products');
-        //dd($response);
+
+        //$response->dump();
 
         $response->assertStatus(200);
         // Then
         // Assert it sends the correct HTTP Status
-        $response->assertJsonStructure(['*'=>[
-            'id',
-            'name',
-            'price'
-        ]]);
+        $response->assertJsonStructure(['data'=>
+            ['*' =>
+                [
+                    'type',
+                    'id',
+                    'attributes' => [
+                        'name',
+                        'price'
+                    ],
+                    'links'
+                ]
+            ]
+        ]);
 
         $response->assertJsonFragment([
+            'type' => 'products',
+            'id' => $products[0]->id,
             'name' => $products[0]->name,
-            'price' => strval($products[0]->price)
+            'price' => strval($products[0]->price),
+            'self' => route('api.get.product', ['id' => $products[0]->id])
         ]);
 
     }
@@ -243,6 +253,7 @@ class ProductTest extends TestCase
             NULL
         ]]);
     }
+
     /**
      * Show-1
      */
@@ -259,16 +270,25 @@ class ProductTest extends TestCase
             // Assert it sends the correct HTTP Status
                // Assert the response has the correct structure
         $response->assertJsonStructure([
-            'id',
-            'name',
-            'price'
+            'data' => [
+                'type',
+                'id',
+                'attributes' => [
+                    'name',
+                    'price'
+                ],
+                'links'
+            ]
         ]);
 
         // Assert the product was created
         // with the correct data
         $response->assertJsonFragment([
+            'type' => 'products',
+            'id' => $product->id,
             'name' => $product->name,
-            'price' => strval($product->price)
+            'price' => strval($product->price),
+            'self' => route('api.get.product', ['id' => $product->id])
         ]);
 
             // Assert product is on the database
@@ -277,7 +297,7 @@ class ProductTest extends TestCase
             [
                 'id' => $product->id,
                 'name' => $product->name,
-                'price' => $product->price
+                'price' => $product->price,
             ]
         );
     }
@@ -321,9 +341,7 @@ class ProductTest extends TestCase
     {
         $product = factory(Product::class)->create();
 
-        $newProduct = factory(Product::class)->make([
-            'id' => $product->id,
-        ]);
+        $newProduct = factory(Product::class,'reFormatted')->make();
 
         // When
         $response = $this->json('PUT', '/api/products/'.$product->id, $newProduct->toArray());
@@ -333,26 +351,33 @@ class ProductTest extends TestCase
 
         // Assert the response has the correct structure
         $response->assertJsonStructure([
-            'id',
-            'name',
-            'price'
+            'data' => [
+                'type',
+                'id',
+                'attributes' => [
+                    'name',
+                    'price'
+                ],
+                'links'
+            ]
         ]);
 
         // Assert the product was created
         // with the correct data
         $response->assertJsonFragment([
-            'id' => $newProduct->id,
-            'name' => $newProduct->name,
-            'price' => $newProduct->price
+            'id' => $product->id,
+            'name' => $newProduct->data['attributes']['name'],
+            'price' => $newProduct->data['attributes']['price'],
+            'self' => route('api.get.product', ['id' => $product->id])
         ]);
 
         // Assert product is on the database
         $this->assertDatabaseHas(
             'products',
             [
-                'id' => $newProduct->id,
-                'name' => $newProduct->name,
-                'price' => $newProduct->price
+                'id' => $product->id,
+                'name' => $newProduct->data['attributes']['name'],
+                'price' => $newProduct->data['attributes']['price'],
             ]
         );
     }
@@ -364,10 +389,7 @@ class ProductTest extends TestCase
     {
         $product = factory(Product::class)->create();
 
-        $newProduct = factory(Product::class)->make([
-            'id' => $product->id,
-            'price' => "queso"
-        ]);
+        $newProduct = factory(Product::class,'woutNumPrice')->make();
 
         // When
         $response = $this->json('PUT', '/api/products/'.$product->id, $newProduct->toArray());
@@ -396,10 +418,7 @@ class ProductTest extends TestCase
     {
         $product = factory(Product::class)->create();
 
-        $newProduct = factory(Product::class)->make([
-            'id' => $product->id,
-            'price' => 0.0
-        ]);
+        $newProduct = factory(Product::class,'subZero')->make();
 
         // When
         $response = $this->json('PUT', '/api/products/'.$product->id, $newProduct->toArray());
@@ -424,9 +443,9 @@ class ProductTest extends TestCase
         $this->assertDatabaseMissing(
             'products',
             [
-                'id' => $newProduct->id,
-                'name' => $newProduct->name,
-                'price' => $newProduct->price
+                'id' => $product->id,
+                'name' => $newProduct->data['attributes']['name'],
+                'price' => $newProduct->data['attributes']['price']
             ]
         );
     }
@@ -437,12 +456,10 @@ class ProductTest extends TestCase
     public function test_client_cant_update_a_product_does_not_exist()
     {
 
-        $newProduct = factory(Product::class)->make([
-            'id' => 1
-        ]);
+        $newProduct = factory(Product::class,'reFormatted')->make();
 
         // When
-        $response = $this->json('PUT', '/api/products/'.$newProduct->id, $newProduct->toArray());
+        $response = $this->json('PUT', '/api/products/1', $newProduct->toArray());
 
         // Assert it sends the correct HTTP Status
         $response->assertStatus(404);
@@ -464,9 +481,9 @@ class ProductTest extends TestCase
         $this->assertDatabaseMissing(
             'products',
             [
-                'id' => $newProduct->id,
-                'name' => $newProduct->name,
-                'price' => $newProduct->price
+                'id' => 1,
+                'name' => $newProduct->data['attributes']['name'],
+                'price' => $newProduct->data['attributes']['price']
             ]
         );
     }
@@ -519,5 +536,4 @@ class ProductTest extends TestCase
             ]
         );
     }
-
 }
