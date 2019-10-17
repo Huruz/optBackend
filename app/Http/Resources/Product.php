@@ -23,7 +23,7 @@ class Product extends JsonResource
                 'price' => $this->price,
             ],
             'links' => [
-                'self' => 'link-value'
+                'self' => route('api.get.product', ['id' => $this->id]) //$request_>url()
             ]
         ];
     }

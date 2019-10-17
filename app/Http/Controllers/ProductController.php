@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProduct;
 use App\Http\Requests\UpdateProduct;
+use App\Http\Resources\Product as ProductResource;
+use App\Http\Resources\ProductCollection;
 use \Illuminate\Http\Request;
 use App\Product;
 
@@ -20,7 +22,8 @@ class ProductController extends Controller
         $products = Product::all();
 
         if(!$products->isEmpty()){
-            return response()->json($products,200);
+            //return response()->json(new ProductCollection($products),200);
+            return (new ProductCollection($products))->response()->setStatusCode(200);
         }
         else{
             return response()->json(NULL,200);
@@ -49,11 +52,15 @@ class ProductController extends Controller
         $validated = $request->validated();
 
         // Create a new product
-        $product = Product::create($request->all());
+        $product = Product::create([
+            'name' => $request->input('data.attributes.name'),
+            'price' => $request->input('data.attributes.price')
+        ]);
 
         // Return a response with a product json
         // representation and a 201 status code
-        return response()->json($product,201);
+       // return response()->json($product,201);
+       return (new ProductResource($product))->response()->setStatusCode(201);
     }
 
     /**
@@ -64,10 +71,12 @@ class ProductController extends Controller
      */
     public function show($id)
     {
-        //
+        //return new ProductResource(Product::find($id));
+
         $product = Product::find($id);
         if (!is_null($product)){
-            return response()->json($product,200);
+            //return response()->json(new ProductResource($product),200);
+            return (new ProductResource($product))->response()->setStatusCode(200);
         }
         else{
             $error = ['errors' => ['code' => 'Error-2', 'title' => 'ID does not exist']];
@@ -99,8 +108,12 @@ class ProductController extends Controller
 
         $product = Product::find($id);
         if (!is_null($product)){
-            $product->update($request->all());
-            return response()->json($product,200);
+            $product->update([
+                'name' => $request->input('data.attributes.name'),
+                'price' => $request->input('data.attributes.price'),
+            ]);
+            //return response()->json($product,200);
+            return (new ProductResource($product))->response()->setStatusCode(200);
         }
         else{
             $error = ['errors' => ['code' => 'Error-2', 'title' => 'ID does not exist']];

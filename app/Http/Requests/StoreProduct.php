@@ -28,8 +28,8 @@ class StoreProduct extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|string', //First rule to prove
-            'price' => 'required|numeric|major'
+            'data.attributes.name' => 'required|string', //First rule to prove
+            'data.attributes.price' => 'required|numeric|major'
         ];
     }
 
@@ -41,19 +41,19 @@ class StoreProduct extends FormRequest
     public function messages()
     {
         return [
-            'name.required' => [
+            'data.attributes.name.required' => [
                 'code' => 'Error-1',
                 'title' => 'A name is required'
             ],
-            'price.required' => [
+            'data.attributes.price.required' => [
                 'code' => 'Error-1',
                 'title' => 'A price is required'
             ],
-            'price.numeric' => [
+            'data.attributes.price.numeric' => [
                 'code' => 'Error-1',
                 'title' => 'The price has to be numeric'
             ],
-            'price.major' => [
+            'data.attributes.price.major' => [
                 'code' => 'Error-1',
                 'title' => 'The price has to be more than 0 (zero)'
             ],

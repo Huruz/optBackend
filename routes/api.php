@@ -25,7 +25,7 @@ Route::post('products', "ProductController@store");
 
 Route::get('products', "ProductController@index");
 
-Route::get('products/{id}', "ProductController@show")->where(['id' => '[0-9]+']);
+Route::get('products/{id}', "ProductController@show")->where(['id' => '[0-9]+'])->name('api.get.product');
 
 Route::put('products/{id}', "ProductController@update")->where(['id' => '[0-9]+']);
 
